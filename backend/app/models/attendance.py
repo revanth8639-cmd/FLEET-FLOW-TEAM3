@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import date as calendar_date, datetime
 
-from sqlalchemy import Column, DateTime, String, ForeignKey
+from sqlalchemy import Column, Date, DateTime, String, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -9,6 +9,7 @@ from app.database import Base
 
 class Attendance(Base):
     __tablename__ = "attendance"
+    __table_args__ = (UniqueConstraint("driver_id", "date", name="uq_attendance_driver_date"),)
 
     attendance_id = Column(
         UUID(as_uuid=True),
@@ -35,4 +36,10 @@ class Attendance(Base):
     status = Column(
         String,
         nullable=False
+    )
+
+    date = Column(
+        Date,
+        nullable=False,
+        default=lambda: datetime.utcnow().date(),
     )

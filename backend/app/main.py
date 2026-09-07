@@ -20,6 +20,8 @@ from app.routers import attendance
 from app.routers import dashboard
 from app.routers import reports
 from app.routers import leave_request
+from app.routers import activity, system
+from app.utils.websocket_manager import gps_connections
 
 
 print("Shipment module imported")
@@ -27,7 +29,16 @@ print("GPS Tracking module imported")
 
 
 app = FastAPI(title="FleetFlow API")
-Base.metadata.create_all(bind=engine)
+
+
+@app.on_event("startup")
+async def start_realtime_services():
+    await gps_connections.start()
+
+
+@app.on_event("shutdown")
+async def stop_realtime_services():
+    await gps_connections.stop()
 
 # =========================
 # CORS CONFIGURATION
@@ -177,6 +188,8 @@ app.include_router(
 )
 
 app.include_router(leave_request.router, prefix="/api")
+app.include_router(activity.router, prefix="/api")
+app.include_router(system.router, prefix="/api")
 
 
 # =========================

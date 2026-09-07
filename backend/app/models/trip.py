@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, Float, Integer, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -58,3 +58,10 @@ class Trip(Base):
         String,
         default="Scheduled"
     )
+
+    distance_km = Column(Float, nullable=True)
+    actual_distance_km = Column(Float, nullable=True)
+    duration_minutes = Column(Integer, nullable=True)
+    route_type = Column(String, nullable=True)
+    eta = Column(DateTime, nullable=True)
+    remaining_distance_km = Column(Float, nullable=True)

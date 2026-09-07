@@ -22,6 +22,15 @@ class Driver(Base):
         unique=True
     )
 
+    # A persistent assignment is required to scope Driver access to their
+    # own vehicle, GPS data, fuel records, and maintenance alerts.
+    vehicle_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("vehicles.vehicle_id"),
+        unique=True,
+        nullable=True,
+    )
+
     name = Column(
         String,
         nullable=False

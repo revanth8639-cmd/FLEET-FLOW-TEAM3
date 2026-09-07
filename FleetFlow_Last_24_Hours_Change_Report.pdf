@@ -1,0 +1,175 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Length 3074 >>
+stream
+BT
+/F1 11 Tf
+50 790 Td
+/F1 15 Tf
+(FleetFlow Change Report) Tj
+/F1 11 Tf
+0 -20 Td
+(Report date: 21 August 2026) Tj
+0 -16 Td
+(Scope: changes applied during this working session in response to the Milestone Task List) Tj
+0 -16 Td
+(requirements and startup/login issues.) Tj
+0 -16 Td
+(Important: the repository already contained other uncommitted changes before this session.) Tj
+0 -16 Td
+(This report lists only work completed or directly corrected during this session.) Tj
+0 -16 Td
+() Tj
+0 -16 Td
+/F1 15 Tf
+(1. Background scheduling added) Tj
+/F1 11 Tf
+0 -20 Td
+(Added Celery and Redis dependencies and REDIS_URL configuration.) Tj
+0 -16 Td
+(Added backend/app/celery_app.py with hourly maintenance-alert scheduling and 10-minute) Tj
+0 -16 Td
+(delayed-shipment scheduling.) Tj
+0 -16 Td
+(Added task modules that use their own database sessions: maintenance due within seven days) Tj
+0 -16 Td
+(are logged, and shipments in transit for over 24 hours are marked Delayed.) Tj
+0 -16 Td
+() Tj
+0 -16 Td
+/F1 15 Tf
+(2. Role and data-access corrections) Tj
+/F1 11 Tf
+0 -20 Td
+(Drivers can view only their assigned vehicle and their own driver profile.) Tj
+0 -16 Td
+(Attendance endpoints now require authentication; drivers are scoped to their own attendance,) Tj
+0 -16 Td
+(managers can manage records, and deletion is Admin-only.) Tj
+0 -16 Td
+(Notifications are scoped to their recipients; only Admin can view all or delete them.) Tj
+0 -16 Td
+(Dispatchers can create only unassigned shipments and can update shipment status only.) Tj
+0 -16 Td
+(Vehicle hard deletion is Admin-only.) Tj
+0 -16 Td
+() Tj
+0 -16 Td
+/F1 15 Tf
+(3. Startup and login fixes) Tj
+/F1 11 Tf
+0 -20 Td
+(Corrected uvicorn dependency spelling in requirements.txt.) Tj
+0 -16 Td
+(Reworked run.py to install missing dependencies, run Alembic through its supported Python) Tj
+0 -16 Td
+(API, and start Uvicorn safely on Windows paths containing spaces.) Tj
+0 -16 Td
+(Added a development JWT secret fallback and documented SECRET_KEY in backend/.env.example.) Tj
+0 -16 Td
+(Pinned bcrypt to 4.0.x because Passlib 1.7.x and bcrypt 5.x crash during password) Tj
+0 -16 Td
+(verification. Login hashing and a real API login smoke test now pass.) Tj
+0 -16 Td
+() Tj
+0 -16 Td
+/F1 15 Tf
+(4. Frontend corrections) Tj
+/F1 11 Tf
+0 -20 Td
+(Updated Attendance, GPS Tracking, Leave Requests, and Trips data-loading effects to comply) Tj
+0 -16 Td
+(with the React lint rule and prevent the reported lint failures.) Tj
+0 -16 Td
+(Production frontend build completes successfully.) Tj
+0 -16 Td
+() Tj
+0 -16 Td
+/F1 15 Tf
+(Files changed in this session) Tj
+/F1 11 Tf
+0 -20 Td
+(run.py) Tj
+0 -16 Td
+(backend/requirements.txt; backend/.env.example; backend/app/core/security.py) Tj
+0 -16 Td
+(backend/app/celery_app.py; backend/app/tasks/__init__.py; backend/app/tasks/maintenance.py;) Tj
+0 -16 Td
+(backend/app/tasks/shipments.py) Tj
+0 -16 Td
+(backend/app/routers/vehicle.py; driver.py; attendance.py; notification.py; shipment.py) Tj
+0 -16 Td
+(frontend/src/pages/Attendance.jsx; GPSTracking.jsx; LeaveRequests.jsx; Trips.jsx) Tj
+0 -16 Td
+() Tj
+0 -16 Td
+ET
+endstream
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 3 0 R >>
+endobj
+5 0 obj
+<< /Length 638 >>
+stream
+BT
+/F1 11 Tf
+50 790 Td
+/F1 15 Tf
+(Verification performed) Tj
+/F1 11 Tf
+0 -20 Td
+(Python compilation passed.) Tj
+0 -16 Td
+(Celery task registration passed.) Tj
+0 -16 Td
+(Frontend ESLint and production build passed.) Tj
+0 -16 Td
+(PostgreSQL migration and FastAPI startup passed.) Tj
+0 -16 Td
+(Health endpoint and isolated login API smoke test passed.) Tj
+0 -16 Td
+() Tj
+0 -16 Td
+/F1 15 Tf
+(Run command) Tj
+/F1 11 Tf
+0 -20 Td
+(From the project root: python run.py) Tj
+0 -16 Td
+(The launcher builds the frontend, applies database migrations, and serves the integrated app) Tj
+0 -16 Td
+(at http://127.0.0.1:8000.) Tj
+0 -16 Td
+() Tj
+0 -16 Td
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000003247 00000 n 
+0000003373 00000 n 
+0000004062 00000 n 
+0000004188 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4258
+%%EOF

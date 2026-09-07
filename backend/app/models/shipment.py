@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, Float, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -29,6 +29,8 @@ class Shipment(Base):
     )
 
     tracking_number = Column(String, unique=True, nullable=False)
+    customer_name = Column(String, nullable=True, index=True)
+    shipment_weight = Column(Float, nullable=True)
 
     source = Column(String, nullable=False)
 
@@ -37,5 +39,6 @@ class Shipment(Base):
     status = Column(String, default="Created")
 
     eta = Column(String, nullable=True)
+    expected_delivery_at = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)

@@ -13,7 +13,7 @@ def create_trip(db: Session, trip: TripCreate):
 
 
 def get_trips(db: Session):
-    return db.query(Trip).all()
+    return db.query(Trip).order_by(Trip.start_time.asc(), Trip.trip_id.asc()).all()
 
 
 def get_trip(db: Session, trip_id):

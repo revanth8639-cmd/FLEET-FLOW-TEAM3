@@ -34,11 +34,12 @@ export default function Signup() {
     }
 
     try {
-      await api.post("/auth/send-otp", {
+      const response = await api.post("/auth/send-otp", {
         email: form.email,
       });
 
-      alert("OTP sent to your email.");
+      const developmentOtp = response.data.development_otp;
+      alert(developmentOtp ? `Development OTP: ${developmentOtp}` : "OTP sent to your email.");
       setShowOtp(true);
     } catch (err) {
       alert(

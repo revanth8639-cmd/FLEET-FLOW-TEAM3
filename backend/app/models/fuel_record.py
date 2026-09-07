@@ -46,3 +46,6 @@ class FuelRecord(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+    mileage = Column(Float, nullable=True)
+    refill_date = Column(DateTime, nullable=True)

@@ -5,7 +5,12 @@ import os
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+# A local-development fallback keeps the one-command launcher usable before a
+# .env file exists.  Deployments must override it with a long random value.
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "fleetflow-local-development-key-change-this-before-production",
+)
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(
     os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60)

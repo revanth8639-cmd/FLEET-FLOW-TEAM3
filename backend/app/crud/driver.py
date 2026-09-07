@@ -1,7 +1,22 @@
 from sqlalchemy.orm import Session
 
 from app.models.driver import Driver
+from app.models.user import RoleEnum, User
 from app.schemas.driver import DriverCreate, DriverUpdate
+
+
+def ensure_driver_profiles(db: Session) -> None:
+    """Backfill driver profiles for accounts created before profile syncing."""
+    driver_users = db.query(User).filter(User.role == RoleEnum.Driver).all()
+    existing = {driver.user_id for driver in db.query(Driver).filter(Driver.user_id.is_not(None)).all()}
+    created = False
+    for user in driver_users:
+        if user.user_id in existing:
+            continue
+        db.add(Driver(user_id=user.user_id, name=user.full_name, phone=user.phone or "Not provided", license_number=f"PENDING-{str(user.user_id)[:8]}", status="Available"))
+        created = True
+    if created:
+        db.commit()
 
 
 def create_driver(db: Session, driver: DriverCreate):

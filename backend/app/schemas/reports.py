@@ -1,4 +1,7 @@
-from pydantic import BaseModel
+from datetime import date
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict
 
 
 class ShipmentReport(BaseModel):
@@ -30,3 +33,17 @@ class ReportsSummary(BaseModel):
     total_maintenance: int
     total_notifications: int
     total_attendance: int
+
+
+class ReportResponse(BaseModel):
+    """Common shape used by report previews and export generation."""
+
+    report_type: str
+    title: str
+    date_from: date | None
+    date_to: date | None
+    columns: list[str]
+    rows: list[dict[str, Any]]
+    summary: dict[str, Any]
+
+    model_config = ConfigDict(from_attributes=True)

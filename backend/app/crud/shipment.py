@@ -12,7 +12,7 @@ def create_shipment(db: Session, shipment: ShipmentCreate):
 
 
 def get_shipments(db: Session):
-    return db.query(Shipment).all()
+    return db.query(Shipment).order_by(Shipment.created_at.asc(), Shipment.tracking_number.asc()).all()
 
 
 def get_shipment(db: Session, shipment_id):

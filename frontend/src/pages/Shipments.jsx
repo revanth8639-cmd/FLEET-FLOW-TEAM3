@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getShipments,
   createShipment,
@@ -11,11 +11,14 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Shipments() {
   const { user } = useAuth();
-  const canEdit = user?.role !== "Driver";
+  const canEdit = ["Admin", "FleetManager", "Dispatcher"].includes(user?.role);
+  const canDelete = user?.role === "Admin";
   const [shipments, setShipments] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     tracking_number: "",
@@ -27,17 +30,18 @@ export default function Shipments() {
   });
 
   useEffect(() => {
+    if (!user) return;
     loadShipments();
     loadDrivers();
-    loadAttendance();
-  }, []);
+    if (canEdit) loadAttendance();
+  }, [user, canEdit]);
 
   async function loadDrivers() {
     try {
       setDrivers(await getDrivers());
     } catch (error) {
       console.error(error);
-      alert("Failed to load drivers");
+      setError(error.response?.data?.detail || "Unable to load drivers.");
     }
   }
 
@@ -47,7 +51,7 @@ export default function Shipments() {
       setAttendance(response.data);
     } catch (error) {
       console.error(error);
-      alert("Failed to load driver attendance");
+      setError(error.response?.data?.detail || "Unable to load driver attendance.");
     }
   }
 
@@ -57,6 +61,11 @@ export default function Shipments() {
 
   const isPresent = (driverId) => attendanceFor(driverId)?.status === "Present";
   const presentDrivers = drivers.filter((driver) => isPresent(driver.driver_id));
+  const visibleShipments = useMemo(() => shipments.filter((shipment) => {
+    if (statusFilter === "All") return true;
+    if (statusFilter === "Active") return !["Delivered", "Cancelled"].includes(shipment.status);
+    return shipment.status === statusFilter;
+  }).sort((a, b) => { const created = new Date(a.created_at || 0) - new Date(b.created_at || 0); return created || String(a.tracking_number).localeCompare(String(b.tracking_number)); }), [shipments, statusFilter]);
 
   async function loadShipments() {
     try {
@@ -64,7 +73,7 @@ export default function Shipments() {
       setShipments(data);
     } catch (error) {
       console.error(error);
-      alert("Failed to load shipments");
+      setError(error.response?.data?.detail || "Unable to load shipments.");
     }
   }
 
@@ -141,6 +150,7 @@ export default function Shipments() {
       <h1 className="text-3xl font-bold mb-6">
         Shipment Management
       </h1>
+      {error && <div className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</div>}
 
       {canEdit && <div className="flex gap-3 mb-6 flex-wrap">
 
@@ -212,29 +222,42 @@ export default function Shipments() {
 
       </div>}
 
+      <div className="mb-4 flex items-center gap-3">
+        <label htmlFor="shipment-status-filter" className="font-semibold">Show</label>
+        <select id="shipment-status-filter" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="border p-2 rounded">
+          <option value="All">All shipments</option>
+          <option value="Active">Active shipments</option>
+          <option value="Delivered">Completed / delivered</option>
+          <option value="Cancelled">Cancelled shipments</option>
+        </select>
+      </div>
+
       <table className="w-full border border-gray-300">
 
         <thead className="bg-blue-600 text-white">
           <tr>
-            <th className="p-3">Tracking No</th>
+            <th className="p-3">S.No</th>
+            <th>Tracking No</th>
             <th>Source</th>
             <th>Destination</th>
             <th>Status</th>
             <th>ETA</th>
             <th>Assigned Driver</th>
-            <th>Action</th>
+            {canEdit && <th>Action</th>}
           </tr>
         </thead>
 
         <tbody>
 
-          {shipments.length > 0 ? (
-            shipments.map((shipment) => (
+          {visibleShipments.length > 0 ? (
+            visibleShipments.map((shipment, index) => (
 
               <tr
                 key={shipment.shipment_id}
                 className="border-b text-center"
               >
+
+                <td className="p-3 font-semibold text-gray-500">{index + 1}</td>
 
                 <td className="p-3">
                   {shipment.tracking_number}
@@ -265,12 +288,12 @@ export default function Shipments() {
                     Edit
                   </button>
 
-                  <button
+                  {canDelete && <button
                     onClick={() => handleDelete(shipment.shipment_id)}
                     className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700"
                   >
                     Delete
-                  </button>
+                  </button>}
 
                 </td>}
 
@@ -279,7 +302,7 @@ export default function Shipments() {
             ))
           ) : (
             <tr>
-              <td colSpan="7" className="p-4 text-center">
+              <td colSpan={canEdit ? 8 : 7} className="p-4 text-center">
                 No shipments found.
               </td>
             </tr>

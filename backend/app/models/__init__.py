@@ -10,3 +10,6 @@ from . import notification
 from . import attendance
 from . import email_otp
 from . import leave_request
+from . import shipment_history
+from . import activity_log
+from . import job_run

@@ -15,6 +15,7 @@ import Attendance from "./pages/Attendance";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 import LeaveRequests from "./pages/LeaveRequests";
+import Users from "./pages/Users";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Layout from "./components/Layout";
@@ -157,6 +158,7 @@ function App() {
           element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>}
         />
         <Route path="/leaves" element={<ProtectedRoute><Layout><LeaveRequests /></Layout></ProtectedRoute>} />
+        <Route path="/users" element={<ProtectedRoute><Layout><Users /></Layout></ProtectedRoute>} />
 
         {/* Unknown routes */}
         <Route path="*" element={<Navigate to="/login" replace />} />

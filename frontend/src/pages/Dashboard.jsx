@@ -1,91 +1,48 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { FaChartLine, FaClock, FaExclamationTriangle, FaGasPump, FaMapMarkedAlt, FaTools, FaTruck, FaUsers } from "react-icons/fa";
 import api from "../api/axios";
+import MapView from "../components/MapView";
+
+const formatNumber = (value) => Number(value || 0).toLocaleString("en-IN");
+const money = (value) => `₹${formatNumber(value)}`;
+const percent = (value) => `${Number(value || 0).toFixed(0)}%`;
+const roleView = (role) => role === "Dispatcher" ? "logistics" : role === "Driver" ? "driver" : "fleet";
+
+function Card({ label, value, hint, Icon, tone = "blue" }) {
+  const colors = { blue: "bg-blue-50 text-blue-600", green: "bg-emerald-50 text-emerald-600", amber: "bg-amber-50 text-amber-600", red: "bg-red-50 text-red-600", violet: "bg-violet-50 text-violet-600" };
+  return <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex justify-between gap-3"><div><p className="text-sm font-medium text-slate-500">{label}</p><p className="mt-2 text-3xl font-bold text-slate-900">{value}</p></div><span className={`grid h-11 w-11 place-items-center rounded-xl ${colors[tone]}`}><Icon /></span></div>{hint && <p className="mt-3 text-xs text-slate-500">{hint}</p>}</article>;
+}
+function Panel({ title, action, children, className = "" }) { return <section className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}><div className="mb-5 flex items-center justify-between gap-3"><h2 className="font-bold text-slate-900">{title}</h2>{action}</div>{children}</section>; }
+function Bars({ items, color = "bg-blue-600", suffix = "" }) { const max = Math.max(...items.map((item) => Number(item.count) || 0), 1); return <div className="space-y-3">{items.map((item) => <div key={item.label}><div className="mb-1 flex justify-between gap-3 text-sm"><span className="truncate text-slate-600">{item.label}</span><b>{formatNumber(item.count)}{suffix}</b></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${color}`} style={{ width: `${((Number(item.count) || 0) / max) * 100}%` }} /></div></div>)}</div>; }
+const rows = (record = {}) => Object.entries(record).map(([label, count]) => ({ label, count }));
 
 export default function Dashboard() {
-  const [summary, setSummary] = useState(null);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Get dashboard summary
-    api
-      .get("/dashboard/summary")
-      .then((res) => setSummary(res.data))
-      .catch((err) => console.error(err));
-
-    // Get logged-in user
-    api
-      .get("/auth/me")
-      .then((res) => setUser(res.data))
-      .catch((err) => console.error(err));
-  }, []);
-
-  if (!summary || !user) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <h2 className="text-2xl font-bold">Loading Dashboard...</h2>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-4xl font-bold">FleetFlow Dashboard 🚚</h1>
-          <p className="text-gray-600 mt-2">
-            Welcome, <span className="font-semibold">{user.full_name}</span>
-          </p>
-        </div>
-
-        <div className="bg-blue-100 px-4 py-2 rounded-lg shadow">
-          <h3 className="font-bold text-lg">{user.full_name}</h3>
-          <p className="text-sm text-gray-600">{user.role}</p>
-        </div>
-      </div>
-
-      {/* Dashboard Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-blue-500 text-white p-6 rounded-xl shadow">
-          <h2 className="text-lg">Vehicles</h2>
-          <p className="text-3xl font-bold">{summary.total_vehicles}</p>
-        </div>
-
-        <div className="bg-green-500 text-white p-6 rounded-xl shadow">
-          <h2 className="text-lg">Drivers</h2>
-          <p className="text-3xl font-bold">{summary.total_drivers}</p>
-        </div>
-
-        <div className="bg-orange-500 text-white p-6 rounded-xl shadow">
-          <h2 className="text-lg">Shipments</h2>
-          <p className="text-3xl font-bold">{summary.total_shipments}</p>
-        </div>
-
-        <div className="bg-purple-500 text-white p-6 rounded-xl shadow">
-          <h2 className="text-lg">Trips</h2>
-          <p className="text-3xl font-bold">{summary.total_trips}</p>
-        </div>
-
-        <div className="bg-red-500 text-white p-6 rounded-xl shadow">
-          <h2 className="text-lg">Maintenance</h2>
-          <p className="text-3xl font-bold">{summary.total_maintenance}</p>
-        </div>
-
-        <div className="bg-yellow-500 text-white p-6 rounded-xl shadow">
-          <h2 className="text-lg">Fuel Records</h2>
-          <p className="text-3xl font-bold">{summary.total_fuel_records}</p>
-        </div>
-
-        <div className="bg-pink-500 text-white p-6 rounded-xl shadow">
-          <h2 className="text-lg">Notifications</h2>
-          <p className="text-3xl font-bold">{summary.total_notifications}</p>
-        </div>
-
-        <div className="bg-gray-700 text-white p-6 rounded-xl shadow">
-          <h2 className="text-lg">Attendance</h2>
-          <p className="text-3xl font-bold">{summary.total_attendance}</p>
-        </div>
-      </div>
-    </div>
-  );
+  const [summary, setSummary] = useState(null); const [user, setUser] = useState(null); const [view, setView] = useState("fleet"); const [gps, setGps] = useState([]); const [health, setHealth] = useState(null); const [error, setError] = useState("");
+  useEffect(() => { Promise.all([api.get("/dashboard/summary"), api.get("/auth/me")]).then(([data, account]) => { setSummary(data.data); setUser(account.data); setView(roleView(account.data.role)); }).catch((err) => setError(err.response?.data?.detail || "Unable to load dashboard data.")); }, []);
+  useEffect(() => { if (!user || user.role === "Driver") return; Promise.all([api.get("/gps/"), api.get("/vehicles/"), api.get("/drivers/"), api.get("/trips/")]).then(([locations, vehicles, drivers, trips]) => { const active = (trips.data || []).filter((trip) => trip.status === "In Progress"); setGps((locations.data || []).filter((point) => active.some((trip) => trip.vehicle_id === point.vehicle_id)).map((point) => { const trip = active.find((item) => item.vehicle_id === point.vehicle_id); const vehicle = (vehicles.data || []).find((item) => item.vehicle_id === point.vehicle_id); const driver = (drivers.data || []).find((item) => item.driver_id === trip?.driver_id); return { ...point, vehicle: vehicle?.registration_number || "Unknown vehicle", driver: driver?.name || "Unassigned", status: Number(point.speed) > 0 ? "Online" : "Offline", updated: point.timestamp ? new Date(point.timestamp).toLocaleString() : "Unknown" }; })); }).catch(() => setGps([])); }, [user]);
+  useEffect(() => { if (user?.role === "Admin") api.get("/system/health").then((result) => setHealth(result.data)).catch(() => setHealth(null)); }, [user]);
+  const volume = useMemo(() => [...(summary?.shipment_volume_trend || [])].sort((a, b) => a.date.localeCompare(b.date)), [summary]);
+  if (error && !summary) return <div className="rounded-xl bg-red-50 p-5 text-red-700">{error}</div>;
+  if (!summary || !user) return <div className="grid min-h-[60vh] place-items-center text-slate-500">Loading dashboard…</div>;
+  const isDriver = user.role === "Driver"; const canFleet = ["Admin", "FleetManager"].includes(user.role); const canLogistics = ["Admin", "FleetManager", "Dispatcher"].includes(user.role); const tabs = [canFleet && "fleet", canLogistics && "logistics", user.role === "Admin" && "admin", user.role === "Admin" && "system analytics"].filter(Boolean);
+  return <main className="mx-auto max-w-7xl space-y-6"><header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-sm font-semibold text-blue-600">FLEETFLOW OPERATIONS</p><h1 className="mt-1 text-3xl font-bold text-slate-900">{isDriver ? "My dashboard" : `${view[0].toUpperCase() + view.slice(1)} dashboard`}</h1><p className="mt-1 text-sm text-slate-500">A live overview of the metrics relevant to your role.</p></div><button type="button" onClick={() => window.location.reload()} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">Refresh data</button></header>{!isDriver && tabs.length > 1 && <nav className="flex flex-wrap gap-2">{tabs.map((tab) => <button key={tab} type="button" onClick={() => setView(tab)} className={`rounded-xl px-4 py-2 text-sm font-semibold capitalize ${view === tab ? "bg-blue-600 text-white" : "border border-slate-200 bg-white text-slate-600"}`}>{tab}</button>)}</nav>}{isDriver && <Driver summary={summary} />}{view === "fleet" && canFleet && <Fleet summary={summary} />}{view === "logistics" && canLogistics && <Logistics summary={summary} gps={gps} />}{view === "admin" && user.role === "Admin" && <Admin summary={summary} volume={volume} health={health} />}{view === "system analytics" && user.role === "Admin" && <SystemAnalytics summary={summary} />}</main>;
 }
+
+function Fleet({ summary }) { const active = (summary.vehicle_statuses?.Assigned || 0) + (summary.vehicle_statuses?.["In Transit"] || 0); const alerts = summary.upcoming_maintenance || []; return <><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Card label="Active vehicles" value={formatNumber(summary.total_vehicles)} hint={`${active} currently assigned or in transit`} Icon={FaTruck} /><Card label="Fleet utilization" value={percent(summary.fleet_utilization_rate)} hint="Assigned and in-transit vehicles" Icon={FaChartLine} tone="green" /><Card label="Fuel cost this month" value={money(summary.fuel_monthly?.cost)} hint={`${formatNumber(summary.fuel_monthly?.efficiency_km_per_litre)} km/l fleet efficiency`} Icon={FaGasPump} tone="violet" /><Card label="Maintenance alerts" value={formatNumber(alerts.length)} hint="Upcoming or overdue services" Icon={FaTools} tone={alerts.length ? "amber" : "green"} /></div><div className="grid gap-6 lg:grid-cols-2"><Panel title="Vehicle status overview"><Bars items={rows(summary.vehicle_statuses)} /></Panel><Panel title="Fleet by vehicle type"><Bars items={rows(summary.vehicle_types)} color="bg-violet-600" /></Panel><Panel title="Fuel consumption summary"><div className="grid grid-cols-2 gap-4 border-b border-slate-100 pb-4 text-sm"><p className="text-slate-500">Fuel used<b className="mt-1 block text-xl text-slate-900">{formatNumber(summary.fuel_monthly?.litres)} L</b></p><p className="text-slate-500">Distance covered<b className="mt-1 block text-xl text-slate-900">{formatNumber(summary.fuel_monthly?.distance_km)} km</b></p></div><div className="mt-4"><Bars items={(summary.top_fuel_vehicles || []).map((item) => ({ label: item.vehicle, count: item.cost }))} color="bg-amber-500" /></div></Panel><Panel title="Upcoming & overdue maintenance" action={<Link className="text-sm font-semibold text-blue-600" to="/maintenance">View all</Link>}><div className="space-y-3">{alerts.slice(0, 5).map((item) => <div key={item.maintenance_id} className="flex items-center justify-between rounded-xl bg-amber-50 px-3 py-3 text-sm"><div><b>Vehicle {item.vehicle_id?.slice(0, 8)}</b><p className="text-slate-500">{item.service_type || "Scheduled service"}</p></div><span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">{item.status}</span></div>)}{!alerts.length && <Empty text="No maintenance alerts. Your fleet is clear." />}</div></Panel></div></>; }
+
+function Logistics({ summary, gps }) { const route = summary.route_performance || {}; return <><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Card label="Active shipments" value={formatNumber(summary.active_shipments)} hint="Assigned or in transit" Icon={FaTruck} /><Card label="Delayed shipments" value={formatNumber(summary.delayed_shipments)} hint="Needs operational attention" Icon={FaExclamationTriangle} tone={summary.delayed_shipments ? "red" : "green"} /><Card label="Average delivery time" value={`${formatNumber(summary.average_delivery_hours)} h`} hint="Completed delivery average" Icon={FaClock} tone="violet" /><Card label="ETA accuracy" value={`${formatNumber(summary.eta_accuracy_minutes)} min`} hint="Average predicted vs actual variance" Icon={FaChartLine} tone="green" /></div><div className="grid gap-6 lg:grid-cols-2"><Panel title="Delivery status breakdown"><Bars items={rows(summary.shipment_statuses)} color="bg-cyan-600" /></Panel><Panel title="Route performance"><div className="grid grid-cols-2 gap-4"><Metric label="Actual distance" value={`${formatNumber(route.actual_distance_km)} km`} /><Metric label="Estimated distance" value={`${formatNumber(route.estimated_distance_km)} km`} /><Metric label="Actual duration" value={`${formatNumber(route.actual_duration_minutes)} min`} /><Metric label="Estimated duration" value={`${formatNumber(route.estimated_duration_minutes)} min`} /></div><div className="mt-5 border-t pt-4"><p className="mb-3 text-sm font-semibold">Most-used route modes</p><Bars items={rows(summary.route_modes)} /></div></Panel></div><Panel title="Live tracking map snapshot" action={<Link className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600" to="/gps"><FaMapMarkedAlt /> Open live tracking</Link>}><MapView vehicles={gps} height="320px" />{!gps.length && <p className="mt-3 text-center text-sm text-slate-500">No active vehicle positions are available yet.</p>}</Panel></>; }
+
+function Admin({ summary, volume, health }) { const drivers = [...(summary.driver_leaderboard || [])].sort((a, b) => b.trips_completed - a.trips_completed); const max = Math.max(...volume.map((item) => item.count), 1); return <><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Card label="Total shipments" value={formatNumber(summary.total_shipments)} hint="Current reporting period" Icon={FaTruck} /><Card label="Fleet utilization" value={percent(summary.fleet_utilization_rate)} hint="Current operational capacity" Icon={FaChartLine} tone="green" /><Card label="Active drivers" value={formatNumber(summary.total_drivers)} hint="Registered driver profiles" Icon={FaUsers} tone="violet" /><Card label="Notifications unread" value={formatNumber(summary.notification_stats?.unread)} hint={`${formatNumber(summary.notification_stats?.last_24_hours)} received in 24 hours`} Icon={FaExclamationTriangle} tone="amber" /></div><div className="grid gap-6 xl:grid-cols-[1.2fr_.8fr]"><Panel title="Driver performance leaderboard" action={<Link className="text-sm font-semibold text-blue-600" to="/drivers">Manage drivers</Link>}><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="text-xs uppercase text-slate-500"><tr><th>Driver</th><th>Trips</th><th>On-time</th><th>Attendance</th></tr></thead><tbody>{drivers.map((driver) => <tr key={driver.driver_id} className="border-t border-slate-100"><td className="py-3 font-semibold">{driver.driver}</td><td>{driver.trips_completed}</td><td>{percent(driver.on_time_rate)}</td><td>{percent(driver.attendance_rate)}</td></tr>)}{!drivers.length && <tr><td colSpan="4"><Empty text="No driver performance data yet." /></td></tr>}</tbody></table></div></Panel><Panel title="Shipment volume — 7 days"><div className="flex h-44 items-end gap-2">{volume.map((item) => <div key={item.date} className="flex flex-1 flex-col items-center gap-2"><span className="text-xs font-semibold">{item.count || ""}</span><div className="w-full rounded-t-lg bg-blue-600" style={{ height: `${Math.max(5, (item.count / max) * 100)}%` }} /><span className="text-[10px] text-slate-500">{item.date.slice(5)}</span></div>)}</div></Panel></div><div className="grid gap-6 lg:grid-cols-2"><Panel title="Shipments needing attention" action={<Link className="text-sm font-semibold text-blue-600" to="/shipments">View shipments</Link>}><div className="space-y-2">{(summary.shipment_attention || []).map((item) => <div key={item.shipment_id} className="flex justify-between rounded-xl bg-red-50 px-3 py-3 text-sm"><b>{item.tracking_number || "Shipment"}</b><span className="font-semibold text-red-700">{item.status}</span></div>)}{!summary.shipment_attention?.length && <Empty text="No delayed or cancelled shipments." />}</div></Panel><Panel title="Maintenance analytics"><Bars items={rows(summary.maintenance_by_type)} color="bg-amber-500" /><p className="mt-5 border-t pt-4 text-sm text-slate-600">Most serviced: {(summary.most_serviced_vehicles || []).map((item) => `${item.vehicle} (${item.records})`).join(", ") || "No records"}</p></Panel></div><Panel title="System monitoring"><div className="grid grid-cols-2 gap-4 text-sm"><Metric label="Backend" value={health?.backend || "Unavailable"} /><Metric label="Database" value={health?.database || "Unavailable"} /><Metric label="Redis" value={health?.redis || "Unavailable"} /><Metric label="Celery" value={health?.celery_ready ? "Ready" : "Unavailable"} /></div></Panel></>; }
+
+function Driver({ summary }) { const p = summary.own_performance || {}; return <><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Card label="My vehicle" value={summary.own_vehicle_status || "Unassigned"} hint={summary.own_vehicle_id ? `Vehicle ID: ${summary.own_vehicle_id.slice(0, 8)}` : "Contact your fleet manager"} Icon={FaTruck} /><Card label="Current assignment" value={summary.own_active_trip_id ? "In progress" : "No active trip"} hint={summary.own_next_shipment?.tracking_number ? `Next: ${summary.own_next_shipment.tracking_number}` : "No upcoming shipment"} Icon={FaMapMarkedAlt} tone="green" /><Card label="Trips completed" value={formatNumber(p.trips_completed)} hint={`${percent(p.on_time_rate)} on-time delivery`} Icon={FaChartLine} tone="violet" /><Card label="My attendance" value={`${formatNumber(p.present_days)}/${formatNumber(p.attendance_days)}`} hint="Present days in recorded history" Icon={FaUsers} tone="amber" /></div><div className="grid gap-6 lg:grid-cols-2"><Panel title="Recent trip activity"><div className="space-y-3">{(summary.own_recent_trips || []).map((trip) => <div key={trip.trip_id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm"><b>Trip {trip.trip_id.slice(0, 8)}</b><span className="text-slate-500">{trip.status || "Unknown"}{trip.end_time ? ` · ${new Date(trip.end_time).toLocaleDateString()}` : ""}</span></div>)}{!summary.own_recent_trips?.length && <Empty text="Your completed trips will appear here." />}</div></Panel><Panel title="My vehicle maintenance"><div className="space-y-3">{(summary.upcoming_maintenance || []).slice(0, 4).map((item) => <div key={item.maintenance_id} className="rounded-xl bg-amber-50 px-4 py-3 text-sm"><b>{item.service_type || "Service reminder"}</b><p className="mt-1 text-amber-800">{item.status}</p></div>)}{!summary.upcoming_maintenance?.length && <Empty text="No maintenance alerts for your assigned vehicle." />}</div></Panel></div></>; }
+function SystemAnalytics({ summary }) {
+  const [period, setPeriod] = useState("all"); const [startDate, setStartDate] = useState(""); const [endDate, setEndDate] = useState(""); const [analytics, setAnalytics] = useState(null); const [error, setError] = useState("");
+  const fetchAnalytics = async (selectedPeriod = period) => { const today = new Date(); let from = ""; let to = ""; if (selectedPeriod === "week") { const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay() + 6) % 7)); from = monday.toISOString().slice(0, 10); to = today.toISOString().slice(0, 10); } if (selectedPeriod === "month") { from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10); to = today.toISOString().slice(0, 10); } if (selectedPeriod === "custom") { from = startDate; to = endDate; if (!from || !to) { setError("Choose both custom start and end dates."); return; } } try { setError(""); const response = await api.get("/system/analytics", { params: { date_from: from || undefined, date_to: to || undefined } }); setAnalytics(response.data); } catch (requestError) { setError(requestError.response?.data?.detail || "Unable to load system analytics."); } };
+  useEffect(() => { const timer = window.setTimeout(() => { api.get("/system/analytics").then((response) => setAnalytics(response.data)).catch((requestError) => setError(requestError.response?.data?.detail || "Unable to load system analytics.")); }, 0); return () => window.clearTimeout(timer); }, []);
+  const data = analytics || { user_registrations: summary.user_registration_trend || [], vehicle_registrations: summary.vehicle_registration_trend || [], shipment_delivery_statuses: summary.shipment_delivery_statuses || {}, fleet_usage_statuses: summary.vehicle_statuses || {} };
+  const chart = (title, points, color) => { const max = Math.max(...points.map((item) => item.count), 1); const total = points.reduce((sum, item) => sum + Number(item.count || 0), 0); return <div className="rounded-xl border border-slate-200 bg-white p-4"><div className="mb-4 flex items-start justify-between"><div><p className="text-sm font-semibold text-slate-800">{title}</p><p className="mt-1 text-xs text-slate-500">Records by registration date</p></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">Total: {total}</span></div><div className="h-44 overflow-x-auto rounded-lg border border-slate-100 bg-slate-50 p-3"><div className="flex h-full min-w-max items-end gap-3 border-b-2 border-slate-300 px-1">{points.map((item) => <div key={item.date} className="flex h-full w-14 flex-col justify-end text-center"><span className="mb-1 text-xs font-bold text-slate-800">{item.count}</span><div className="min-h-2 w-full rounded-t-md" style={{ height: `${Math.max(8, item.count / max * 100)}%`, backgroundColor: color }} /><span className="mt-2 whitespace-nowrap text-[10px] font-medium text-slate-600">{new Date(`${item.date}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })}</span></div>)}{!points.length && <p className="m-auto text-sm text-slate-500">No records in this period.</p>}</div></div></div>; };
+  return <Panel title="System analytics"><form onSubmit={(event) => { event.preventDefault(); void fetchAnalytics(); }} className="mb-6 flex flex-wrap items-end gap-3 rounded-xl bg-slate-50 p-4"><label className="text-sm font-medium text-slate-700">Period<select value={period} onChange={(event) => setPeriod(event.target.value)} className="mt-1 block rounded-lg border border-slate-300 bg-white p-2"><option value="all">All records</option><option value="week">This week</option><option value="month">This month</option><option value="custom">Custom date range</option></select></label>{period === "custom" && <><label className="text-sm font-medium text-slate-700">From<input required type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} className="mt-1 block rounded-lg border border-slate-300 p-2" /></label><label className="text-sm font-medium text-slate-700">To<input required type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} className="mt-1 block rounded-lg border border-slate-300 p-2" /></label></>}<button className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white">Apply</button></form>{error && <p className="mb-4 text-sm text-red-600">{error}</p>}<div className="grid gap-6 lg:grid-cols-2">{chart("User registrations", data.user_registrations, "#7c3aed")}{chart("Vehicle registrations", data.vehicle_registrations, "#2563eb")}</div><div className="mt-6 grid gap-6 lg:grid-cols-2"><div><p className="mb-3 text-sm font-semibold text-slate-700">Shipment delivery status</p><Bars items={rows(data.shipment_delivery_statuses)} color="bg-emerald-600" /></div><div><p className="mb-3 text-sm font-semibold text-slate-700">Fleet usage status</p><Bars items={rows(data.fleet_usage_statuses)} color="bg-amber-500" /></div></div></Panel>;
+}
+function Metric({ label, value }) { return <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p><p className="mt-2 text-xl font-bold">{value}</p></div>; }
+function Empty({ text }) { return <p className="py-6 text-center text-sm text-slate-500">{text}</p>; }

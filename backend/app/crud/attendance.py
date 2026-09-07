@@ -8,8 +8,18 @@ from app.schemas.attendance import (
 
 
 def create_attendance(db: Session, attendance: AttendanceCreate):
+    values = attendance.model_dump()
+    values["date"] = values.get("date") or values["check_in"].date()
+    existing = db.query(Attendance).filter(Attendance.driver_id == values["driver_id"], Attendance.date == values["date"]).first()
+    if existing:
+        existing.status = values["status"]
+        existing.check_in = values["check_in"]
+        existing.check_out = values.get("check_out")
+        db.commit()
+        db.refresh(existing)
+        return existing
     db_attendance = Attendance(
-        **attendance.model_dump()
+        **values
     )
 
     db.add(db_attendance)

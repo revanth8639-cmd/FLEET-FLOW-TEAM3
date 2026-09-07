@@ -18,7 +18,10 @@ def create_maintenance(db: Session, maintenance: MaintenanceCreate):
 
 
 def get_maintenances(db: Session):
-    return db.query(VehicleMaintenance).all()
+    return db.query(VehicleMaintenance).order_by(
+        VehicleMaintenance.service_date.asc(),
+        VehicleMaintenance.maintenance_id.asc(),
+    ).all()
 
 
 def get_maintenance(db: Session, maintenance_id):

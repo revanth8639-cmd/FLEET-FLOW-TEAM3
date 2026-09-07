@@ -1,9 +1,10 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-from app.database import Base
+from app.database import Base, DATABASE_URL
 
 # Import all models so Alembic can detect tables
 from app.models import (
@@ -17,10 +18,16 @@ from app.models import (
     fuel_record,
     notification,
     attendance,
+    activity_log,
 )
 
 # Alembic Config object
 config = context.config
+if DATABASE_URL:
+    # Reuse the same host/Docker normalization as the application engine.
+    # This keeps local Windows migrations from trying to resolve the Docker
+    # hostname ``host.docker.internal``.
+    config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # Configure Python logging
 if config.config_file_name is not None:

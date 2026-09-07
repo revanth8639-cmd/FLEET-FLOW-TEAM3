@@ -1,10 +1,17 @@
 fastapi
-unicorn[standard]
+uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 python-dotenv
 alembic
 python-jose[cryptography]
 passlib[bcrypt]
+# passlib 1.7.x is compatible with bcrypt 4.0.x.  Later bcrypt releases
+# remove a compatibility attribute and make password verification noisy/break.
+bcrypt>=4.0.1,<4.1
 python-multipart
 pydantic[email]
+celery
+redis
+reportlab
+openpyxl

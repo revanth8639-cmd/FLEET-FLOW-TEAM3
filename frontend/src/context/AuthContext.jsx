@@ -5,19 +5,26 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return null;
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      setUser(null);
+      setIsLoading(false);
+      return null;
+    }
 
     try {
       const response = await api.get("/auth/me");
       setUser(response.data);
       return response.data;
     } catch {
-      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
       setUser(null);
       return null;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -29,6 +36,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
+    setIsLoading(true);
     const formData = new URLSearchParams();
 
     formData.append("username", email);
@@ -47,19 +55,13 @@ export function AuthProvider({ children }) {
 
       console.log("Login Success:", res.data);
 
-      localStorage.setItem("token", res.data.access_token);
+      sessionStorage.setItem("token", res.data.access_token);
       await refreshUser();
 
       return res.data;
     } catch (err) {
+      setIsLoading(false);
       console.error("Login Failed:", err.response?.data);
-
-      alert(
-        JSON.stringify(
-          err.response?.data || err.message
-        )
-      );
-
       throw err;
     }
   };
@@ -70,14 +72,16 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     setUser(null);
+    setIsLoading(false);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        isLoading,
         login,
         signup,
         logout,

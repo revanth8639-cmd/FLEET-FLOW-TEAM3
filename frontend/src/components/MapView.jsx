@@ -114,6 +114,18 @@ function MapController({
   return null;
 }
 
+function RouteController({ routeGeometry }) {
+  const map = useMap();
+  useEffect(() => {
+    if (routeGeometry?.type !== "LineString" || routeGeometry.coordinates?.length < 2) return;
+    map.fitBounds(L.latLngBounds(routeGeometry.coordinates.map(([longitude, latitude]) => [latitude, longitude])), { padding: [50, 50] });
+  }, [map, routeGeometry]);
+  return null;
+}
+
+const startIcon = L.divIcon({ className: "route-marker-icon", html: '<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:3px solid white;border-radius:50%;background:#16a34a;color:white;font-weight:700;box-shadow:0 1px 5px rgba(0,0,0,.45)">S</div>', iconSize: [30, 30], iconAnchor: [15, 15] });
+const destinationIcon = L.divIcon({ className: "route-marker-icon", html: '<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:3px solid white;border-radius:50%;background:#dc2626;color:white;font-weight:700;box-shadow:0 1px 5px rgba(0,0,0,.45)">E</div>', iconSize: [30, 30], iconAnchor: [15, 15] });
+
 
 // --------------------------------------------------
 // MAP VIEW
@@ -125,6 +137,9 @@ export default function MapView({
   onSelectVehicle,
   routeHistory = {},
   routeGeometry = null,
+  startLocation = "Start location",
+  endLocation = "Destination",
+  height = "550px",
 }) {
 
   console.log(
@@ -150,7 +165,7 @@ export default function MapView({
         zoom={6}
         scrollWheelZoom={true}
         style={{
-          height: "550px",
+          height,
           width: "100%",
           borderRadius: "12px",
         }}
@@ -172,13 +187,13 @@ export default function MapView({
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <RouteController routeGeometry={routeGeometry} />
 
-        {routeGeometry?.type === "LineString" && routeGeometry.coordinates?.length > 1 && (
-          <Polyline
-            positions={routeGeometry.coordinates.map(([longitude, latitude]) => [latitude, longitude])}
-            pathOptions={{ color: "#2563eb", weight: 5, opacity: 0.8 }}
-          />
-        )}
+        {routeGeometry?.type === "LineString" && routeGeometry.coordinates?.length > 1 && <>
+          <Polyline positions={routeGeometry.coordinates.map(([longitude, latitude]) => [latitude, longitude])} pathOptions={{ color: "#2563eb", weight: 5, opacity: 0.8 }} />
+          <Marker position={[routeGeometry.coordinates[0][1], routeGeometry.coordinates[0][0]]} icon={startIcon}><Popup><b>Start</b><br />{startLocation}</Popup></Marker>
+          <Marker position={[routeGeometry.coordinates.at(-1)[1], routeGeometry.coordinates.at(-1)[0]]} icon={destinationIcon}><Popup><b>Destination</b><br />{endLocation}</Popup></Marker>
+        </>}
 
 
         {/* VEHICLE MARKERS */}

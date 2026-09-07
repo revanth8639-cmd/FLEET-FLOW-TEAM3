@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -46,3 +46,8 @@ class Vehicle(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+    brand = Column(String, nullable=True)
+    model = Column(String, nullable=True)
+    manufacture_year = Column(Integer, nullable=True)
+    assigned_driver_id = Column(UUID(as_uuid=True), ForeignKey("drivers.driver_id"), nullable=True, unique=True)

@@ -10,6 +10,10 @@ class VehicleCreate(BaseModel):
     vehicle_type: str
     capacity: str
     fuel_type: str
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    manufacture_year: Optional[int] = None
+    assigned_driver_id: Optional[UUID] = None
     status: str = "Available"
 
 
@@ -18,6 +22,10 @@ class VehicleUpdate(BaseModel):
     vehicle_type: Optional[str] = None
     capacity: Optional[str] = None
     fuel_type: Optional[str] = None
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    manufacture_year: Optional[int] = None
+    assigned_driver_id: Optional[UUID] = None
     status: Optional[str] = None
 
 
@@ -27,6 +35,10 @@ class VehicleOut(BaseModel):
     vehicle_type: str
     capacity: str
     fuel_type: str
+    brand: Optional[str]
+    model: Optional[str]
+    manufacture_year: Optional[int]
+    assigned_driver_id: Optional[UUID]
     status: str
     created_at: datetime
 

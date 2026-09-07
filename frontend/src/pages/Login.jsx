@@ -26,10 +26,12 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      alert(
-        err.response?.data?.detail ||
-          "Invalid email or password"
-      );
+      const message = err.response?.status === 401
+        ? "Invalid email or password. Create an account first if you have not signed up."
+        : err.response?.status === 503
+          ? (err.response?.data?.detail || "Database unavailable. Start PostgreSQL and try again.")
+        : err.response?.data?.detail || "Unable to sign in. Please try again.";
+      alert(message);
     } finally {
       setLoading(false);
     }

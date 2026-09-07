@@ -51,3 +51,7 @@ class EmailUpdate(BaseModel):
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str
+
+
+class UserRoleUpdate(BaseModel):
+    role: RoleEnum

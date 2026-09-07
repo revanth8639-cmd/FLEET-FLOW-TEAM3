@@ -8,12 +8,14 @@ class NotificationCreate(BaseModel):
     user_id: UUID
     title: str
     message: str
+    type: str = "info"
 
 
 class NotificationUpdate(BaseModel):
     title: str | None = None
     message: str | None = None
     is_read: bool | None = None
+    type: str | None = None
 
 
 class NotificationOut(BaseModel):
@@ -21,6 +23,7 @@ class NotificationOut(BaseModel):
     user_id: UUID
     title: str
     message: str
+    type: str
     is_read: bool
     created_at: datetime
 

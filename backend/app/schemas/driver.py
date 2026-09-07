@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict
 
 
 class DriverCreate(BaseModel):
+    user_id: UUID | None = None
+    vehicle_id: UUID | None = None
     name: str
     phone: str
     license_number: str
@@ -12,6 +14,8 @@ class DriverCreate(BaseModel):
 
 
 class DriverUpdate(BaseModel):
+    user_id: UUID | None = None
+    vehicle_id: UUID | None = None
     name: str | None = None
     phone: str | None = None
     license_number: str | None = None
@@ -20,6 +24,8 @@ class DriverUpdate(BaseModel):
 
 class DriverOut(BaseModel):
     driver_id: UUID
+    user_id: UUID | None
+    vehicle_id: UUID | None
     name: str
     phone: str
     license_number: str

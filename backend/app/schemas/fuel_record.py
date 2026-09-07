@@ -10,6 +10,9 @@ class FuelRecordCreate(BaseModel):
     fuel_cost: float
     fuel_station: str
     filled_by: str | None = None
+    fuel_date: datetime | None = None
+    mileage: float | None = None
+    refill_date: datetime | None = None
 
 
 class FuelRecordUpdate(BaseModel):
@@ -17,6 +20,9 @@ class FuelRecordUpdate(BaseModel):
     fuel_cost: float | None = None
     fuel_station: str | None = None
     filled_by: str | None = None
+    fuel_date: datetime | None = None
+    mileage: float | None = None
+    refill_date: datetime | None = None
 
 
 class FuelRecordOut(BaseModel):
@@ -27,5 +33,7 @@ class FuelRecordOut(BaseModel):
     fuel_station: str
     filled_by: str | None
     fuel_date: datetime
+    mileage: float | None
+    refill_date: datetime | None
 
     model_config = ConfigDict(from_attributes=True)

@@ -5,13 +5,12 @@ import {
   FaUsers,
   FaBoxes,
   FaRoute,
-  FaMapMarkerAlt,
   FaTools,
   FaGasPump,
-  FaBell,
   FaUserCheck,
   FaChartBar,
   FaSignOutAlt,
+  FaUserCog,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 
@@ -24,22 +23,20 @@ export default function Sidebar() {
     { name: "Drivers", path: "/drivers", icon: <FaUsers /> },
     { name: "Shipments", path: "/shipments", icon: <FaBoxes /> },
     { name: "Trips", path: "/trips", icon: <FaRoute /> },
-    { name: "GPS Tracking", path: "/gps", icon: <FaMapMarkerAlt /> },
     { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
     { name: "Fuel Records", path: "/fuel", icon: <FaGasPump /> },
-    { name: "Notifications", path: "/notifications", icon: <FaBell /> },
     { name: "Attendance", path: "/attendance", icon: <FaUserCheck /> },
     { name: "Reports", path: "/reports", icon: <FaChartBar /> },
     { name: "My Profile", path: "/profile", icon: <FaUsers /> },
+    { name: "Users & Roles", path: "/users", icon: <FaUserCog /> },
     { name: "Leave Requests", path: "/leaves", icon: <FaUserCheck /> },
   ];
 
   const visibleItems = menuItems.filter((item) => {
     if (!user) return true;
-    if (user.role === "Driver" && item.path === "/dashboard") return false;
-    if (["/drivers", "/reports", "/attendance", "/maintenance", "/fuel"].includes(item.path)) {
-      return user.role !== "Driver";
-    }
+    // Drivers use the same protected shell, with APIs scoping their data to
+    // their own vehicle, trips, maintenance, and attendance.
+    if (item.path === "/users") return user.role === "Admin";
     return true;
   });
 

@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Keep data tables easy to scan by separating every header and record cell. */
+table {
+  border-collapse: collapse;
+  border: 1px solid #d1d5db;
+}
+
+table th,
+table td {
+  border: 1px solid #d1d5db;
+  padding: 0.75rem;
+}

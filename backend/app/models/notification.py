@@ -25,6 +25,9 @@ class Notification(Base):
 
     message = Column(String, nullable=False)
 
-    is_read = Column(Boolean, default=False)
+    # Event category used by the notification center and role-specific alerts.
+    type = Column(String, nullable=False, default="info", server_default="info")
+
+    is_read = Column(Boolean, nullable=False, default=False, server_default="false")
 
     created_at = Column(DateTime, default=datetime.utcnow)
