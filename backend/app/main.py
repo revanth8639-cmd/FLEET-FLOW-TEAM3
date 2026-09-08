@@ -1,11 +1,12 @@
 from pathlib import Path
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.database import Base, engine
+from app.core.security import validate_production_security
 import app.models
 from app.routers import auth
 from app.routers import shipment
@@ -33,6 +34,7 @@ app = FastAPI(title="FleetFlow API")
 
 @app.on_event("startup")
 async def start_realtime_services():
+    validate_production_security()
     await gps_connections.start()
 
 
@@ -44,23 +46,16 @@ async def stop_realtime_services():
 # CORS CONFIGURATION
 # =========================
 
+allowed_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
+if not allowed_origins and os.getenv("ENVIRONMENT", "development").lower() != "production":
+    allowed_origins = [
+        "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177", "http://localhost:5178",
+        "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5175", "http://127.0.0.1:5176", "http://127.0.0.1:5177", "http://127.0.0.1:5178",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:5176",
-        "http://localhost:5177",
-        "http://localhost:5178",
-
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:5175",
-        "http://127.0.0.1:5176",
-        "http://127.0.0.1:5177",
-        "http://127.0.0.1:5178",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

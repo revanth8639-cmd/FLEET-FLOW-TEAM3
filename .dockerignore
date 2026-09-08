@@ -1,0 +1,11 @@
+.git
+.vscode
+.agents
+**/__pycache__
+**/*.py[cod]
+backend/venv
+frontend/node_modules
+frontend/dist
+backend/.env
+.env
+*.log

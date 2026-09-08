@@ -1,3 +1,4 @@
+import os
 import re
 from datetime import datetime, timedelta
 
@@ -70,8 +71,9 @@ def send_otp(request: SendOTPRequest, db: Session = Depends(get_db)):
     delivered = send_otp_email(request.email, otp)
     if delivered:
         return {"message": "OTP sent successfully"}
-    # Docker/local development has no SMTP credentials by default.  Expose a
-    # one-time code only in this mode, while production keeps using email.
+    # Never expose a valid OTP in a production response.
+    if os.getenv("ENVIRONMENT", "development").lower() == "production":
+        raise HTTPException(status_code=503, detail="Email delivery is unavailable. Please try again later.")
     return {"message": "Email is not configured; use the development OTP shown below.", "development_otp": otp}
 
 

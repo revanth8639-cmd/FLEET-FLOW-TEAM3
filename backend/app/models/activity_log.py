@@ -15,4 +15,4 @@ class ActivityLog(Base):
     action = Column(String, nullable=False)
     entity_type = Column(String, nullable=True)
     entity_id = Column(String, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)

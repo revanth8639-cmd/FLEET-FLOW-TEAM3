@@ -3,7 +3,7 @@ import enum
 
 from datetime import datetime
 
-from sqlalchemy import Column, String, DateTime, Enum, Boolean
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Enum, String
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -18,6 +18,12 @@ class RoleEnum(str, enum.Enum):
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('Admin', 'FleetManager', 'Driver', 'Dispatcher')",
+            name="users_role_check",
+        ),
+    )
 
     user_id = Column(
         UUID(as_uuid=True),

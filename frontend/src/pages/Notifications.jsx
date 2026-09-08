@@ -6,19 +6,23 @@ export default function Notifications() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  async function loadNotifications() {
-    try {
-      const response = await api.get("/notifications/");
-      setNotifications(response.data);
-      setError("");
-    } catch (requestError) {
-      setError(requestError.response?.data?.detail || "Unable to load notifications.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { void loadNotifications(); }, []);
+  useEffect(() => {
+    let active = true;
+    api.get("/notifications/")
+      .then((response) => {
+        if (active) {
+          setNotifications(response.data);
+          setError("");
+        }
+      })
+      .catch((requestError) => {
+        if (active) setError(requestError.response?.data?.detail || "Unable to load notifications.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   async function markRead(notificationId) {
     try {
